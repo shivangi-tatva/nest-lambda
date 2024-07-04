@@ -1,0 +1,32 @@
+service: nestjs-lambda
+
+plugins:
+  - 'serverless-plugin-typescript'
+  - serverless-plugin-optimize
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  timeout: 300
+  environment:
+    DB_URL: mongodb://127.0.0.1:27017
+    DB_NAME: nest-lambda
+    SMTP_HOST: smtp.gmail.com
+    SMTP_PORT: 587
+    SMTP_USER: example@gmail.com
+    SMTP_PASSWORD: password
+    SMTP_EMAIL_FROM: youremail@gmail.com
+    SMTP_EMAIL_TO: toemail@gmail.com
+
+functions:
+  main: # The name of the lambda function
+    handler: src/lambda.handler
+    events:
+      - http:
+          method: any
+          path: /{any+}
+  cronJob:
+    handler: src/cron.handler
+    events: 
+      - schedule: cron(59 23 * * ? *) # Run at 11:59 PM daily
