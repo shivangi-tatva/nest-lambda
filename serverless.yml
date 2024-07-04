@@ -1,7 +1,7 @@
 service: nestjs-lambda
 
 plugins:
-  - 'serverless-plugin-typescript'
+  - serverless-plugin-typescript
   - serverless-plugin-optimize
   - serverless-offline
 
@@ -18,9 +18,19 @@ provider:
     SMTP_PASSWORD: password
     SMTP_EMAIL_FROM: youremail@gmail.com
     SMTP_EMAIL_TO: toemail@gmail.com
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "s3:ListBucket"
+      Resource:
+        - "arn:aws:s3:::${self:service}-test-bucket"
+        - "arn:aws:s3:::${self:service}-test-bucket/*"
+
+custom:
+  bucketName: ${self:service}-test-bucket
 
 functions:
-  main: # The name of the lambda function
+  main:
     handler: src/lambda.handler
     events:
       - http:
@@ -30,3 +40,17 @@ functions:
     handler: src/cron.handler
     events: 
       - schedule: cron(59 23 * * ? *) # Run at 11:59 PM daily
+  s3Trigger:
+    handler: src/s3Trigger.handler
+    events:
+      - s3:
+          bucket: ${self:custom.bucketName}
+          event: s3:ObjectCreated:*
+          existing: true
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
